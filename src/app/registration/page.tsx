@@ -227,7 +227,7 @@ export default function Register() {
                                     {citySuggestions.map((city, idx) => (
                                         <li 
                                             key={idx} 
-                                            onClick={() => selectCity(city)}
+                                            onMouseDown={() => selectCity(city)}
                                             className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-gray-700 flex items-center"
                                         >
                                             <MapPin size={14} className="mr-2 text-gray-400"/> {city}

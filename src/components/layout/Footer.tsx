@@ -19,17 +19,17 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Für Fahrschüler</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/calculator" className="hover:text-white transition-colors">
                   Preisrechner
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/calculator" className="hover:text-white transition-colors">
                   Fahrschulen vergleichen
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/calculator" className="hover:text-white transition-colors">
                   Bewertungen lesen
                 </Link>
               </li>
@@ -39,17 +39,17 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Für Fahrschulen</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/registration" className="hover:text-white transition-colors">
                   Registrieren
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/login" className="hover:text-white transition-colors">
                   Premium Profil
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/login" className="hover:text-white transition-colors">
                   Statistiken
                 </Link>
               </li>
@@ -59,17 +59,17 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Rechtliches</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/impressum" className="hover:text-white transition-colors">
                   Impressum
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/datenschutz" className="hover:text-white transition-colors">
                   Datenschutz
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/agb" className="hover:text-white transition-colors">
                   AGB
                 </Link>
               </li>
@@ -77,7 +77,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 Fahrschulfinder. Alle Rechte vorbehalten.</p>
+          <p>&copy; {new Date().getFullYear()} Fahrschulfinder. Alle Rechte vorbehalten.</p>
         </div>
       </div>
     </footer>
