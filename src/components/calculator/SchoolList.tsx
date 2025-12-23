@@ -6,6 +6,7 @@ import {
     experienceLevels,
 } from "@/lib/priceCalculator";
 import { ChevronRight, CheckCircle2, Trophy } from 'lucide-react';
+import { AVAILABLE_TAGS } from '@/lib/tags'; // <--- Import hinzugefügt
 
 interface School {
     id: string;
@@ -15,7 +16,8 @@ interface School {
     driving_price: number;
     theorypruefung: number;
     praxispruefung: number;
-    is_premium: boolean; // Wichtig: Typ aktualisieren
+    is_premium: boolean;
+    tags?: string[]; // <--- Tags hinzugefügt
 }
 
 interface SchoolListProps {
@@ -44,6 +46,9 @@ export default function SchoolList({
             maximumFractionDigits: 0,
         }).format(price);
     };
+
+    // --- NEU: Helper um Label zu finden ---
+    const getTagLabel = (id: string) => AVAILABLE_TAGS.find(t => t.id === id)?.label || id;
 
     // 1. Preise berechnen und Daten anreichern
     const schoolsWithPrices = schools.map(school => {
@@ -106,6 +111,17 @@ export default function SchoolList({
                                         {school.address}
                                     </p>
                                     
+                                    {/* --- NEU: Tags anzeigen --- */}
+                                    {school.tags && school.tags.length > 0 && (
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            {school.tags.map(tagId => (
+                                                <span key={tagId} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                                    {getTagLabel(tagId)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     {/* Optional: Premium Features hervorheben */}
                                     {school.is_premium && (
                                         <div className="mt-2 text-xs text-blue-700 font-medium flex gap-2">

@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateSchoolPrices, updateSchoolSettings } from '@/app/actions/schoolActions';
+import { AVAILABLE_TAGS } from '@/lib/tags';
+import { Tag } from 'lucide-react';
 import { 
     LayoutDashboard, 
     Euro, 
@@ -26,11 +28,13 @@ import {
     Lightbulb,
     Info,
     ExternalLink
-} from 'lucide-react';
+}  from 'lucide-react';
 import { logout } from "@/app/auth/actions/authActions";
 
 // --- Typen ---
+// 1. Type Update
 type SchoolData = {
+    // ... andere Felder bleiben ...
     id: string;
     name: string;
     city: string;
@@ -44,6 +48,7 @@ type SchoolData = {
     theorypruefung: number;
     praxispruefung: number;
     is_premium: boolean;
+    tags?: string[]; // <--- NEU
 };
 
 type StatsData = {
@@ -438,6 +443,29 @@ export default function ProfileClient({
                                                     )}
                                                 </div>
                                                 {!school.is_premium && <p className="text-xs text-gray-500 ml-1">* Webseiten-Links sind exklusiv für Premium-Partner.</p>}
+                                            </div>
+                                        </div>
+
+                                        {/* --- NEU: LEISTUNGEN & TAGS --- */}
+                                        <div className="space-y-4 pt-4 border-t border-gray-100">
+                                            <h4 className="font-semibold text-gray-800 flex items-center gap-2 pb-2">
+                                                <Tag size={18} className="text-blue-600"/> Leistungen & Merkmale
+                                            </h4>
+                                            <p className="text-sm text-gray-500 mb-4">Wähle aus, was deine Fahrschule besonders macht:</p>
+                                            
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {AVAILABLE_TAGS.map((tag) => (
+                                                    <label key={tag.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50/50 hover:border-blue-200 transition-colors">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="tags" 
+                                                            value={tag.id}
+                                                            defaultChecked={school.tags?.includes(tag.id)}
+                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                        />
+                                                        <span className="text-sm font-medium text-gray-700">{tag.label}</span>
+                                                    </label>
+                                                ))}
                                             </div>
                                         </div>
 

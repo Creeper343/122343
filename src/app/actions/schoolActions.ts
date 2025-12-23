@@ -12,7 +12,6 @@ export async function updateSchoolSettings(formData: FormData) {
         throw new Error("Nicht autorisiert.");
     }
 
-    // 1. Prüfen, ob die Schule Premium ist
     const { data: schoolData } = await supabase
         .from('driving_school')
         .select('is_premium')
@@ -21,25 +20,25 @@ export async function updateSchoolSettings(formData: FormData) {
 
     const isPremium = schoolData?.is_premium || false;
 
-    // 2. Daten aus Formular holen
+    // --- NEU: Tags holen ---
+    const tags = formData.getAll("tags") as string[]; 
+
     const phoneNumber = formData.get("phoneNumber") as string;
     const email = formData.get("email") as string;
-    const website = formData.get("website") as string; // Wird nur bei Premium gespeichert
-    
+    const website = formData.get("website") as string;
     const address = formData.get("address") as string;
     const plz = formData.get("plz") as string;
     const city = formData.get("city") as string;
 
-    // 3. Update-Objekt bauen
     const updates: any = {
         phone_number: phoneNumber,
         email: email,
         address: address,
         PLZ: plz,
-        city: city
+        city: city,
+        tags: tags // <--- Tags speichern
     };
 
-    // NUR WENN PREMIUM: Webseite speichern
     if (isPremium) {
         updates.website = website;
     }
@@ -58,7 +57,26 @@ export async function updateSchoolSettings(formData: FormData) {
     return { success: true, message: "Einstellungen erfolgreich gespeichert!" };
 }
 
-// ... (Rest der Datei: getUniqueCities, getSchoolsByCity, etc. unverändert lassen)
+// ... (getUniqueCities bleibt unverändert)
+
+export async function getSchoolsByCity(city: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("driving_school")
+        .select(
+            "id, name, address, driving_price, grundgebuehr, theorypruefung, praxispruefung, is_premium, tags" // <--- "tags" HIER HINZUFÜGEN
+        )
+        .eq("city", city)
+        .eq("is_published", true);
+
+    if (error) {
+        console.error("Error fetching schools:", error);
+        return [];
+    }
+    return data || [];
+}
+
+// ... (Rest der Datei bleibt unverändert: getSchoolById, updateSchoolPrices, getSchoolStatistics)
 export async function getUniqueCities() {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -76,23 +94,6 @@ export async function getUniqueCities() {
         ...new Set(data.map((item) => item.city).filter(Boolean) as string[]),
     ];
     return uniqueCities;
-}
-
-export async function getSchoolsByCity(city: string) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from("driving_school")
-        .select(
-            "id, name, address, driving_price, grundgebuehr, theorypruefung, praxispruefung, is_premium"
-        )
-        .eq("city", city)
-        .eq("is_published", true);
-
-    if (error) {
-        console.error("Error fetching schools:", error);
-        return [];
-    }
-    return data || [];
 }
 
 export async function getSchoolById(id: string) {
