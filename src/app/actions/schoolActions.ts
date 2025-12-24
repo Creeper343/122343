@@ -34,14 +34,19 @@ export async function updateSchoolSettings(formData: FormData) {
     const plz = formData.get("plz") as string;
     const city = formData.get("city") as string;
 
+    // --- NEU: Tags und Sprachen als Arrays holen ---
+    const tags = formData.getAll("tags") as string[]; 
+    const languages = formData.getAll("languages") as string[];
+
     // 3. Update-Objekt bauen
-    // Wir verwenden 'any', um dynamisch Felder hinzuzufügen, ohne TS-Probleme
     const updates: any = {
         phone_number: phoneNumber,
         email: email,
         address: address,
         PLZ: plz,
-        city: city
+        city: city,
+        tags: tags,          // <-- Speichern
+        languages: languages // <-- Speichern
     };
 
     // NUR WENN PREMIUM: Webseite speichern
@@ -65,7 +70,6 @@ export async function updateSchoolSettings(formData: FormData) {
 
 /**
  * Holt eine Liste aller Städte, in denen Fahrschulen registriert sind.
- * Wird für den City-Filter verwendet.
  */
 export async function getUniqueCities() {
     const supabase = await createClient();
@@ -88,7 +92,6 @@ export async function getUniqueCities() {
 
 /**
  * Holt alle Fahrschulen einer bestimmten Stadt.
- * UPDATE: Lädt jetzt auch PLZ, city, languages und features für die erweiterte Suche/Filterung.
  */
 export async function getSchoolsByCity(city: string) {
     const supabase = await createClient();
@@ -96,7 +99,7 @@ export async function getSchoolsByCity(city: string) {
     const { data, error } = await supabase
         .from("driving_school")
         .select(
-            "id, name, address, PLZ, city, driving_price, grundgebuehr, theorypruefung, praxispruefung, is_premium, languages, features"
+            "id, name, address, PLZ, city, driving_price, grundgebuehr, theorypruefung, praxispruefung, is_premium, languages, features, tags"
         )
         .eq("city", city)
         .eq("is_published", true);
@@ -110,7 +113,6 @@ export async function getSchoolsByCity(city: string) {
 
 /**
  * Holt eine einzelne Fahrschule anhand ihrer ID.
- * Wird für die Detailseite benötigt.
  */
 export async function getSchoolById(id: string) {
     const supabase = await createClient();
@@ -175,7 +177,7 @@ export async function updateSchoolPrices(formData: FormData) {
 }
 
 /**
- * Berechnet Statistiken für das Dashboard einer Fahrschule (Durchschnittspreise, Ranking).
+ * Berechnet Statistiken für das Dashboard einer Fahrschule.
  */
 export async function getSchoolStatistics(city: string, schoolId: string) {
     const supabase = await createClient();

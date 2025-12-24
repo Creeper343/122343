@@ -1,15 +1,16 @@
 // src/components/calculator/SchoolList.tsx
 import Link from 'next/link';
 import { calculatePrice, ExperienceLevel, experienceLevels } from "@/lib/priceCalculator";
-import { ChevronRight, CheckCircle2, Trophy, Star, Languages, Zap } from 'lucide-react';
-import { School } from './CalculatorClient'; // Importiere den Typen
+import { ChevronRight, CheckCircle2, Trophy, Star, Languages, Zap, Check } from 'lucide-react';
+import { School, UserPreferences } from './CalculatorClient';
 
 interface SchoolListProps {
     schools: School[];
     selectedLevel: ExperienceLevel;
+    activePreferences?: UserPreferences;
 }
 
-export default function SchoolList({ schools, selectedLevel }: SchoolListProps) {
+export default function SchoolList({ schools, selectedLevel, activePreferences }: SchoolListProps) {
     
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat("de-DE", {
@@ -19,19 +20,10 @@ export default function SchoolList({ schools, selectedLevel }: SchoolListProps) 
         }).format(price);
     };
 
-    // 1. Daten anreichern
     const schoolsWithPrices = schools.map(school => ({
         ...school,
         totalPrice: calculatePrice(school, selectedLevel)
     }));
-
-    // 2. Sortieren: Premium zuerst, dann nach Preis
-    // Dadurch stehen ALLE Premium-Schulen oben (nicht nur eine)
-    const sortedSchools = schoolsWithPrices.sort((a, b) => {
-        if (a.is_premium && !b.is_premium) return -1;
-        if (!a.is_premium && b.is_premium) return 1;
-        return a.totalPrice - b.totalPrice;
-    });
 
     return (
         <div className="space-y-4">
@@ -41,8 +33,14 @@ export default function SchoolList({ schools, selectedLevel }: SchoolListProps) 
             </div>
 
             <div className="grid gap-4">
-                {sortedSchools.map((school) => {
+                {schoolsWithPrices.map((school) => {
                     const isPremium = school.is_premium;
+                    
+                    // Prüfen ob Sprache matched (für Highlight)
+                    const matchesLanguage = activePreferences && (
+                        school.languages?.includes(activePreferences.targetLanguage) || 
+                        (activePreferences.targetLanguage === "Deutsch" && (!school.languages || school.languages.length === 0))
+                    );
 
                     return (
                         <Link href={`/school/${school.id}`} key={school.id} className="group block">
@@ -53,16 +51,15 @@ export default function SchoolList({ schools, selectedLevel }: SchoolListProps) 
                                     : 'bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'
                                 }
                             `}>
-                                {/* --- PREMIUM BADGE --- */}
+                                {/* KORREKTUR: "Empfohlen" -> "Verifiziert" */}
                                 {isPremium && (
                                     <div className="absolute -top-3 left-6">
                                         <span className="bg-blue-600 text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                                            <Trophy size={10} className="text-yellow-300" /> Empfehlung
+                                            <CheckCircle2 size={12} className="text-white" /> Verifiziert
                                         </span>
                                     </div>
                                 )}
 
-                                {/* --- MAIN CONTENT --- */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
@@ -74,29 +71,43 @@ export default function SchoolList({ schools, selectedLevel }: SchoolListProps) 
                                         </div>
                                     </div>
 
-                                    {/* --- TAGS & FEATURES (Neu) --- */}
+                                    {/* --- TAGS & FEATURES --- */}
                                     <div className="flex flex-wrap gap-2 mt-3">
-                                        {/* Mock Data Fallback falls DB leer */}
-                                        {((school.languages && school.languages.length > 0) ? school.languages : (isPremium ? ["Deutsch", "Englisch"] : ["Deutsch"])).map(lang => (
-                                            <span key={lang} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium">
-                                                <Languages size={12} /> {lang}
-                                            </span>
-                                        ))}
                                         
-                                        {isPremium && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded-md font-medium border border-amber-100">
-                                                <Star size={12} className="fill-amber-400 text-amber-400" /> Top Bewertet
-                                            </span>
-                                        )}
-                                        {isPremium && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-md font-medium border border-green-100">
-                                                <Zap size={12} /> Schnellkurs
-                                            </span>
-                                        )}
+                                        {/* Sprache */}
+                                        {(school.languages && school.languages.length > 0 ? school.languages : ["Deutsch"]).map((lang: string) => {
+                                            const isMatch = activePreferences && activePreferences.targetLanguage === lang;
+                                            
+                                            return (
+                                                <span key={lang} className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md font-medium border ${
+                                                    isMatch 
+                                                    ? 'bg-green-100 text-green-800 border-green-200 shadow-sm' 
+                                                    : 'bg-gray-100 text-gray-600 border-transparent'
+                                                }`}>
+                                                    {isMatch ? <Check size={12} className="text-green-600"/> : <Languages size={12} />} 
+                                                    {lang}
+                                                </span>
+                                            );
+                                        })}
+                                        
+                                        {/* Tags */}
+                                        {school.tags && school.tags.map((tag: string) => {
+                                            const isMatch = activePreferences?.priorityTags.includes(tag);
+
+                                            return (
+                                                <span key={tag} className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md font-medium border ${
+                                                    isMatch 
+                                                    ? 'bg-indigo-100 text-indigo-800 border-indigo-200 shadow-sm' 
+                                                    : 'bg-blue-50 text-blue-700 border-blue-100'
+                                                }`}>
+                                                    {isMatch ? <Check size={12} className="text-indigo-600"/> : <Zap size={12} />} 
+                                                    {tag}
+                                                </span>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                                 
-                                {/* --- PRICE SECTION --- */}
                                 <div className="flex flex-row md:flex-col justify-between items-center md:items-end gap-4 md:gap-1 md:w-48 md:border-l md:border-gray-100 md:pl-6">
                                     <div className="text-left md:text-right">
                                         <span className="text-xs text-gray-400 uppercase font-semibold block mb-0.5">
@@ -105,7 +116,7 @@ export default function SchoolList({ schools, selectedLevel }: SchoolListProps) 
                                         <span className={`text-2xl font-black ${isPremium ? 'text-blue-600' : 'text-gray-900'}`}>
                                             {formatPrice(school.totalPrice)}
                                         </span>
-                                        {isPremium && <p className="text-[10px] text-green-600 font-bold">Bestpreis Garantie</p>}
+                                        {/* KORREKTUR: "Bestpreis Garantie" entfernt */}
                                     </div>
                                     
                                     <div className={`
