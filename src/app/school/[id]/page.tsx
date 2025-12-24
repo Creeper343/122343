@@ -1,92 +1,65 @@
-// src/app/school/[id]/page.tsx
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import SchoolProfileDisplay from "@/components/school/SchoolProfileDisplay";
-import { getSchoolById } from "@/app/actions/schoolActions";
-import { notFound } from "next/navigation";
-import { Metadata } from "next"; // Wichtig für SEO
+// src/app/profile/page.tsx
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from 'next/navigation';
+import ProfileClient from '@/app/profile/ProfileClient';
+import { getAnalyticsStats } from '@/app/actions/analyticsActions'; 
 
-// Interface für die Props
-interface SchoolProfilePageProps {
-    params: Promise<{
-        id: string;
-    }>;
-}
+export default async function ProfilePage() {
+    const supabase = await createClient();
 
-// 1. SEO: Metadaten dynamisch generieren (Titel & Beschreibung für Google)
-export async function generateMetadata({ params }: SchoolProfilePageProps): Promise<Metadata> {
-    const { id } = await params;
-    
-    // Wir holen kurz die Schuldaten für den Titel
-    // Hinweis: Next.js dedupliziert gleiche Requests automatisch, also keine Sorge wegen Performance
-    const school = await getSchoolById(id);
+    // 1. User checken
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/login');
 
-    if (!school) {
-        return {
-            title: "Fahrschule nicht gefunden",
-        };
-    }
+    // 2. ALLE Daten abrufen
+    // WICHTIG: 'tags' muss hier dabei sein!
+    const { data: school, error } = await supabase
+        .from('driving_school')
+        .select(`
+            id, 
+            name, 
+            city, 
+            address, 
+            PLZ, 
+            phone_number, 
+            email, 
+            website, 
+            driving_price, 
+            grundgebuehr, 
+            praxispruefung, 
+            theorypruefung, 
+            is_premium,
+            tags
+        `)
+        .eq('admin_id', user.id)
+        .single();
 
-    return {
-        title: `Fahrschule ${school.name} in ${school.city} - Preise & Infos`,
-        description: `Aktuelle Preise und Infos zur Fahrschule ${school.name} in ${school.city}. Grundgebühr: ${school.grundgebuehr}€, Fahrstunde: ${school.driving_price}€. Jetzt vergleichen!`,
-        openGraph: {
-            title: `${school.name} - Fahrschulfinder`,
-            description: `Preise vergleichen für ${school.name} in ${school.city}.`,
-            // images: ['/opengraph-image.png'], // Optional, falls du spezifische Bilder hast
+    if (error || !school) return <div className="p-8 text-center">Keine Daten gefunden.</div>;
+
+    // 3. Markt-Statistiken abrufen
+    let stats = null;
+    if (school.city) {
+        const { data: citySchools } = await supabase
+            .from('driving_school')
+            .select('driving_price, grundgebuehr')
+            .eq('city', school.city)
+            .eq('is_published', true);
+
+        if (citySchools && citySchools.length > 0) {
+            const totalSchools = citySchools.length;
+            const avgDrivingPrice = Math.round(citySchools.reduce((a, c) => a + (c.driving_price || 0), 0) / totalSchools);
+            const avgGrundgebuehr = Math.round(citySchools.reduce((a, c) => a + (c.grundgebuehr || 0), 0) / totalSchools);
+            const cityRank = citySchools.filter(s => (s.driving_price || 0) < school.driving_price).length + 1;
+            stats = { avgDrivingPrice, avgGrundgebuehr, totalSchools, cityRank };
         }
-    };
-}
-
-// 2. Die eigentliche Page-Komponente
-export default async function SchoolProfilePage({ params }: SchoolProfilePageProps) {
-    const { id } = await params; 
-    const schoolId = id;
-
-    // UUID Validierung
-    const uuidRegex = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
-
-    if (!schoolId || !uuidRegex.test(schoolId)) {
-        console.error("Invalid school ID format received:", schoolId);
-        notFound();
-    }
-    
-    const school = await getSchoolById(schoolId);
-
-    if (!school) {
-        notFound();
     }
 
-    // 3. SEO: JSON-LD (Strukturierte Daten für "Local Business" bei Google Maps/Search)
-    const jsonLd = {
-        '@context': 'https://schema.org',
-        '@type': 'DrivingSchool', // Spezifischer Typ für Fahrschulen
-        name: school.name,
-        address: {
-            '@type': 'PostalAddress',
-            streetAddress: school.address,
-            addressLocality: school.city,
-            postalCode: school.PLZ,
-            addressCountry: 'DE',
-        },
-        priceRange: `${school.driving_price}€`, // Google mag Preisindikationen
-        telephone: school.phone_number,
-        url: `https://deine-domain.de/school/${school.id}`, // HIER DEINE ECHTE DOMAIN EINTRAGEN!
-    };
+    // 4. Analytics Daten abrufen
+    const analytics = await getAnalyticsStats(school.id);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Das Script fügt die strukturierten Daten unsichtbar in den Head ein */}
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-
-            <Header />
-            <main className="flex-grow w-full flex justify-center items-start py-12 px-4">
-                <SchoolProfileDisplay school={school} />
-            </main>
-            <Footer />
+        <div className="flex flex-col items-center justify-center min-h-screen py-8 bg-gray-50">
+            <ProfileClient school={school} stats={stats} analytics={analytics} />
         </div>
     );
 }

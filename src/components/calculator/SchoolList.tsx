@@ -1,42 +1,16 @@
 // src/components/calculator/SchoolList.tsx
 import Link from 'next/link';
-import {
-    calculatePrice,
-    ExperienceLevel,
-    experienceLevels,
-} from "@/lib/priceCalculator";
-import { ChevronRight, CheckCircle2, Trophy } from 'lucide-react';
-
-interface School {
-    id: string;
-    name: string;
-    address: string;
-    grundgebuehr: number;
-    driving_price: number;
-    theorypruefung: number;
-    praxispruefung: number;
-    is_premium: boolean; // Wichtig: Typ aktualisieren
-}
+import { calculatePrice, ExperienceLevel, experienceLevels } from "@/lib/priceCalculator";
+import { ChevronRight, CheckCircle2, Trophy, Star, Languages, Zap } from 'lucide-react';
+import { School } from './CalculatorClient'; // Importiere den Typen
 
 interface SchoolListProps {
     schools: School[];
     selectedLevel: ExperienceLevel;
 }
 
-export default function SchoolList({
-    schools,
-    selectedLevel,
-}: SchoolListProps) {
-    if (schools.length === 0) {
-        return (
-            <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-200 border-dashed">
-                <p className="text-gray-500 font-medium">
-                    Keine Fahrschulen in dieser Stadt gefunden.
-                </p>
-            </div>
-        );
-    }
-
+export default function SchoolList({ schools, selectedLevel }: SchoolListProps) {
+    
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat("de-DE", {
             style: "currency",
@@ -45,86 +19,102 @@ export default function SchoolList({
         }).format(price);
     };
 
-    // 1. Preise berechnen und Daten anreichern
-    const schoolsWithPrices = schools.map(school => {
-        return {
-            ...school,
-            totalPrice: calculatePrice(school, selectedLevel)
-        };
-    });
+    // 1. Daten anreichern
+    const schoolsWithPrices = schools.map(school => ({
+        ...school,
+        totalPrice: calculatePrice(school, selectedLevel)
+    }));
 
-    // 2. Sortieren: Erst Premium, dann Preis (aufsteigend)
+    // 2. Sortieren: Premium zuerst, dann nach Preis
+    // Dadurch stehen ALLE Premium-Schulen oben (nicht nur eine)
     const sortedSchools = schoolsWithPrices.sort((a, b) => {
-        // Wenn a Premium ist und b nicht -> a kommt zuerst (-1)
         if (a.is_premium && !b.is_premium) return -1;
-        // Wenn b Premium ist und a nicht -> b kommt zuerst (1)
         if (!a.is_premium && b.is_premium) return 1;
-        
-        // Wenn beide gleich sind (beide Premium oder beide Standard), entscheidet der Preis
         return a.totalPrice - b.totalPrice;
     });
 
     return (
-        <div>
-            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                Suchergebnisse 
-                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded-full font-normal">
-                    {schools.length} Schulen
-                </span>
-            </h2>
+        <div className="space-y-4">
+            <div className="flex justify-between items-end mb-4 px-2">
+                <h2 className="text-lg font-bold text-gray-700">Suchergebnisse</h2>
+                <span className="text-sm text-gray-500">{schools.length} Fahrschulen gefunden</span>
+            </div>
+
             <div className="grid gap-4">
                 {sortedSchools.map((school) => {
+                    const isPremium = school.is_premium;
+
                     return (
                         <Link href={`/school/${school.id}`} key={school.id} className="group block">
                             <div className={`
-                                relative p-6 rounded-xl border shadow-sm transition-all duration-200 flex flex-col sm:flex-row justify-between items-center gap-4
-                                ${school.is_premium 
-                                    ? 'bg-blue-50/30 border-blue-200 hover:border-blue-400 hover:shadow-md' 
-                                    : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
+                                relative p-6 rounded-2xl transition-all duration-300 flex flex-col md:flex-row gap-6
+                                ${isPremium 
+                                    ? 'bg-gradient-to-r from-white to-blue-50/50 border-2 border-blue-200 shadow-lg hover:shadow-xl hover:border-blue-300 transform hover:-translate-y-1' 
+                                    : 'bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'
                                 }
                             `}>
-                                {/* Premium Badge (Absolut positioniert oder inline) */}
-                                {school.is_premium && (
-                                    <div className="absolute top-0 right-0 mt-3 mr-3 md:mt-4 md:mr-4">
-                                        <span className="inline-flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                                            <CheckCircle2 size={10} /> Empfohlen
+                                {/* --- PREMIUM BADGE --- */}
+                                {isPremium && (
+                                    <div className="absolute -top-3 left-6">
+                                        <span className="bg-blue-600 text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                                            <Trophy size={10} className="text-yellow-300" /> Empfehlung
                                         </span>
                                     </div>
                                 )}
 
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                            {school.name}
-                                        </h3>
-                                        {/* Kleines Icon neben dem Namen für Premium */}
-                                        {school.is_premium && (
-                                            <Trophy size={16} className="text-yellow-500 fill-yellow-500" />
+                                {/* --- MAIN CONTENT --- */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-700 transition-colors flex items-center gap-2">
+                                                {school.name}
+                                                {isPremium && <CheckCircle2 size={18} className="text-blue-500" />}
+                                            </h3>
+                                            <p className="text-gray-500 text-sm">{school.address}, {school.city}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* --- TAGS & FEATURES (Neu) --- */}
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                        {/* Mock Data Fallback falls DB leer */}
+                                        {((school.languages && school.languages.length > 0) ? school.languages : (isPremium ? ["Deutsch", "Englisch"] : ["Deutsch"])).map(lang => (
+                                            <span key={lang} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium">
+                                                <Languages size={12} /> {lang}
+                                            </span>
+                                        ))}
+                                        
+                                        {isPremium && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded-md font-medium border border-amber-100">
+                                                <Star size={12} className="fill-amber-400 text-amber-400" /> Top Bewertet
+                                            </span>
+                                        )}
+                                        {isPremium && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-md font-medium border border-green-100">
+                                                <Zap size={12} /> Schnellkurs
+                                            </span>
                                         )}
                                     </div>
-                                    <p className="text-gray-500 text-sm flex items-center gap-1">
-                                        {school.address}
-                                    </p>
-                                    
-                                    {/* Optional: Premium Features hervorheben */}
-                                    {school.is_premium && (
-                                        <div className="mt-2 text-xs text-blue-700 font-medium flex gap-2">
-                                            <span>✓ Top Bewertung</span>
-                                            <span>✓ Schnelle Termine</span>
-                                        </div>
-                                    )}
                                 </div>
                                 
-                                <div className="text-right flex items-center gap-6 mt-4 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end">
-                                    <div className="flex flex-col items-start sm:items-end">
-                                        <span className="text-xs text-gray-500 uppercase tracking-wide font-semibold">
-                                            {experienceLevels[selectedLevel].label} Paket
+                                {/* --- PRICE SECTION --- */}
+                                <div className="flex flex-row md:flex-col justify-between items-center md:items-end gap-4 md:gap-1 md:w-48 md:border-l md:border-gray-100 md:pl-6">
+                                    <div className="text-left md:text-right">
+                                        <span className="text-xs text-gray-400 uppercase font-semibold block mb-0.5">
+                                            {experienceLevels[selectedLevel].label}
                                         </span>
-                                        <span className="text-2xl font-extrabold text-blue-600">
+                                        <span className={`text-2xl font-black ${isPremium ? 'text-blue-600' : 'text-gray-900'}`}>
                                             {formatPrice(school.totalPrice)}
                                         </span>
+                                        {isPremium && <p className="text-[10px] text-green-600 font-bold">Bestpreis Garantie</p>}
                                     </div>
-                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${school.is_premium ? 'bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-blue-600 group-hover:text-white'}`}>
+                                    
+                                    <div className={`
+                                        h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300
+                                        ${isPremium 
+                                            ? 'bg-blue-600 text-white shadow-lg group-hover:scale-110' 
+                                            : 'bg-gray-100 text-gray-400 group-hover:bg-gray-900 group-hover:text-white'
+                                        }
+                                    `}>
                                         <ChevronRight size={20} />
                                     </div>
                                 </div>

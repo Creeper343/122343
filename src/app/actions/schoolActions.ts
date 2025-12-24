@@ -4,6 +4,10 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
+/**
+ * Aktualisiert die allgemeinen Einstellungen und Kontaktdaten der Fahrschule.
+ * Prüft serverseitig, ob der User Premium-Status hat, bevor die Webseite gespeichert wird.
+ */
 export async function updateSchoolSettings(formData: FormData) {
     const supabase = await createClient();
 
@@ -31,6 +35,7 @@ export async function updateSchoolSettings(formData: FormData) {
     const city = formData.get("city") as string;
 
     // 3. Update-Objekt bauen
+    // Wir verwenden 'any', um dynamisch Felder hinzuzufügen, ohne TS-Probleme
     const updates: any = {
         phone_number: phoneNumber,
         email: email,
@@ -58,7 +63,10 @@ export async function updateSchoolSettings(formData: FormData) {
     return { success: true, message: "Einstellungen erfolgreich gespeichert!" };
 }
 
-// ... (Rest der Datei: getUniqueCities, getSchoolsByCity, etc. unverändert lassen)
+/**
+ * Holt eine Liste aller Städte, in denen Fahrschulen registriert sind.
+ * Wird für den City-Filter verwendet.
+ */
 export async function getUniqueCities() {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -78,12 +86,17 @@ export async function getUniqueCities() {
     return uniqueCities;
 }
 
+/**
+ * Holt alle Fahrschulen einer bestimmten Stadt.
+ * UPDATE: Lädt jetzt auch PLZ, city, languages und features für die erweiterte Suche/Filterung.
+ */
 export async function getSchoolsByCity(city: string) {
     const supabase = await createClient();
+    
     const { data, error } = await supabase
         .from("driving_school")
         .select(
-            "id, name, address, driving_price, grundgebuehr, theorypruefung, praxispruefung, is_premium"
+            "id, name, address, PLZ, city, driving_price, grundgebuehr, theorypruefung, praxispruefung, is_premium, languages, features"
         )
         .eq("city", city)
         .eq("is_published", true);
@@ -95,6 +108,10 @@ export async function getSchoolsByCity(city: string) {
     return data || [];
 }
 
+/**
+ * Holt eine einzelne Fahrschule anhand ihrer ID.
+ * Wird für die Detailseite benötigt.
+ */
 export async function getSchoolById(id: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -112,6 +129,9 @@ export async function getSchoolById(id: string) {
     return data;
 }
 
+/**
+ * Aktualisiert die Preise einer Fahrschule.
+ */
 export async function updateSchoolPrices(formData: FormData) {
     const supabase = await createClient();
 
@@ -154,6 +174,9 @@ export async function updateSchoolPrices(formData: FormData) {
     return { success: true, message: "Prices updated successfully!" };
 }
 
+/**
+ * Berechnet Statistiken für das Dashboard einer Fahrschule (Durchschnittspreise, Ranking).
+ */
 export async function getSchoolStatistics(city: string, schoolId: string) {
     const supabase = await createClient();
     
@@ -175,6 +198,7 @@ export async function getSchoolStatistics(city: string, schoolId: string) {
     const totalGrund = schools.reduce((acc, curr) => acc + (curr.grundgebuehr || 0), 0);
     const avgGrundgebuehr = Math.round(totalGrund / totalSchools);
 
+    // Sortieren für Ranking
     const sortedByPrice = [...schools].sort((a, b) => a.driving_price - b.driving_price);
     const rankIndex = sortedByPrice.findIndex(s => s.id === schoolId);
     const cityRank = rankIndex !== -1 ? rankIndex + 1 : totalSchools;
