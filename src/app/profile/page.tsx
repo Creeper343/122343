@@ -1,8 +1,7 @@
 // src/app/profile/page.tsx
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from "@/utils/supabase/server";
 import { redirect } from 'next/navigation';
 import ProfileClient from '@/app/profile/ProfileClient';
-// WICHTIG: Dieser Import muss da sein!
 import { getAnalyticsStats } from '@/app/actions/analyticsActions'; 
 
 export default async function ProfilePage() {
@@ -13,6 +12,7 @@ export default async function ProfilePage() {
     if (!user) redirect('/login');
 
     // 2. ALLE Daten abrufen
+    // WICHTIG: 'tags' muss hier dabei sein!
     const { data: school, error } = await supabase
         .from('driving_school')
         .select(`
@@ -28,7 +28,8 @@ export default async function ProfilePage() {
             grundgebuehr, 
             praxispruefung, 
             theorypruefung, 
-            is_premium
+            is_premium,
+            tags
         `)
         .eq('admin_id', user.id)
         .single();
@@ -53,12 +54,11 @@ export default async function ProfilePage() {
         }
     }
 
-    // 4. NEU: Analytics Daten abrufen
+    // 4. Analytics Daten abrufen
     const analytics = await getAnalyticsStats(school.id);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen py-8 bg-gray-50">
-            {/* WICHTIG: Hier muss 'analytics={analytics}' stehen! */}
             <ProfileClient school={school} stats={stats} analytics={analytics} />
         </div>
     );

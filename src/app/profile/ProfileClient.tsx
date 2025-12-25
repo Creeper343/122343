@@ -1,20 +1,40 @@
 // src/app/profile/ProfileClient.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateSchoolPrices, updateSchoolSettings } from '@/app/actions/schoolActions';
 import { AVAILABLE_TAGS } from '@/lib/tags';
-import { AVAILABLE_LANGUAGES } from '@/lib/languages';
+import { Tag } from 'lucide-react';
 import { 
-    LayoutDashboard, Euro, Settings, LogOut, MapPin, Trophy, TrendingUp, 
-    Building2, Save, Phone, Mail, Globe, Home, CheckCircle2, Lock, Eye, 
-    MousePointer, UserCheck, Lightbulb, Info, ExternalLink, Tag, Languages 
+    LayoutDashboard, 
+    Euro, 
+    Settings, 
+    LogOut, 
+    MapPin, 
+    Trophy, 
+    TrendingUp, 
+    Building2, 
+    Save, 
+    Phone, 
+    Mail, 
+    Globe, 
+    Home, 
+    CheckCircle2,
+    Lock,
+    Eye,
+    MousePointer,
+    UserCheck,
+    Lightbulb,
+    Info,
+    ExternalLink
 }  from 'lucide-react';
 import { logout } from "@/app/auth/actions/authActions";
 
 // --- Typen ---
+// 1. Type Update
 type SchoolData = {
+    // ... andere Felder bleiben ...
     id: string;
     name: string;
     city: string;
@@ -28,8 +48,7 @@ type SchoolData = {
     theorypruefung: number;
     praxispruefung: number;
     is_premium: boolean;
-    tags?: string[];
-    languages?: string[];
+    tags?: string[]; // <--- NEU
 };
 
 type StatsData = {
@@ -57,36 +76,11 @@ export default function ProfileClient({
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'dashboard' | 'prices' | 'settings'>('dashboard');
     
-    // States für Feedback
+    // States für Feedback-Nachrichten
     const [priceMsg, setPriceMsg] = useState<string | null>(null);
     const [priceError, setPriceError] = useState<string | null>(null);
     const [settingsMsg, setSettingsMsg] = useState<string | null>(null);
     const [settingsError, setSettingsError] = useState<string | null>(null);
-
-    // --- NEU: Kontrollierter Zustand für Tags & Sprachen ---
-    // Das stellt sicher, dass die Checkboxen immer den aktuellen Stand anzeigen
-    const [selectedTags, setSelectedTags] = useState<string[]>(school.tags || []);
-    const [selectedLanguages, setSelectedLanguages] = useState<string[]>(school.languages || []);
-
-    // Wenn sich die Schul-Daten vom Server aktualisieren (nach dem Speichern),
-    // synchronisieren wir den lokalen Zustand der Checkboxen.
-    useEffect(() => {
-        setSelectedTags(school.tags || []);
-        setSelectedLanguages(school.languages || []);
-    }, [school]);
-
-    // Helper zum Umschalten der Checkboxen (für sauberes UI-Verhalten)
-    const toggleTag = (tagId: string) => {
-        setSelectedTags(prev => 
-            prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]
-        );
-    };
-
-    const toggleLanguage = (lang: string) => {
-        setSelectedLanguages(prev => 
-            prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
-        );
-    };
 
     // --- Handler ---
     async function handlePriceSubmit(formData: FormData) {
@@ -104,7 +98,6 @@ export default function ProfileClient({
         setSettingsMsg(null);
         setSettingsError(null);
         try {
-            // FormData enthält automatisch alle Inputs mit 'name', auch unsere Checkboxen
             const result = await updateSchoolSettings(formData);
             if (result.success) setSettingsMsg("Profil erfolgreich aktualisiert!");
         } catch (e: any) {
@@ -121,9 +114,11 @@ export default function ProfileClient({
         : (priceDiff > 0 ? `+${priceDiff}€ über Ø` : `${priceDiff}€ unter Ø`);
 
     return (
+        // LAYOUT FIX: overflow-hidden auf dem äußersten Container + fixed inset-0
         <div className="flex h-screen w-full bg-gray-100 overflow-hidden fixed inset-0">
             
             {/* --- SIDEBAR --- */}
+            {/* shrink-0 verhindert das Zusammenquetschen */}
             <aside className="w-64 bg-slate-900 text-white flex-col hidden md:flex shrink-0">
                 <div className="p-6 border-b border-slate-800">
                     <h1 className="text-xl font-bold flex items-center gap-2">
@@ -154,6 +149,7 @@ export default function ProfileClient({
                             onClick={() => setActiveTab('settings')} 
                         />
                     </div>
+                    {/* Zur Website Button */}
                     <div className="pt-2">
                         <button onClick={() => router.push('/')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
                             <ExternalLink size={20} /><span>Zur Website</span>
@@ -172,9 +168,10 @@ export default function ProfileClient({
             </aside>
 
             {/* --- MAIN CONTENT --- */}
+            {/* flex-col sorgt dafür, dass Header oben ist und der Rest darunter den Platz füllt */}
             <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 
-                {/* Header */}
+                {/* Header: shrink-0 fixiert ihn oben */}
                 <header className="bg-white shadow-sm shrink-0 z-10 px-8 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                         <MapPin size={16} />
@@ -190,7 +187,7 @@ export default function ProfileClient({
                     </div>
                 </header>
 
-                {/* SCROLL-AREA */}
+                {/* SCROLL-AREA: Dies ist das einzige Element, das scrollt (overflow-y-auto) */}
                 <div className="flex-1 overflow-y-auto p-8 scroll-smooth">
                     <div className="max-w-7xl mx-auto space-y-8 pb-12">
                         
@@ -211,6 +208,7 @@ export default function ProfileClient({
                                     </div>
                                 </div>
 
+                                {/* Hinweis Box */}
                                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
                                     <Info className="text-blue-600 shrink-0 mt-0.5" size={20} />
                                     <div>
@@ -222,6 +220,7 @@ export default function ProfileClient({
                                     </div>
                                 </div>
 
+                                {/* Statistik Karten */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     <StatCard 
                                         title="Dein Fahrstundenpreis" 
@@ -250,6 +249,7 @@ export default function ProfileClient({
                                     />
                                 </div>
 
+                                {/* Info Box & Premium Box */}
                                 <div className="grid lg:grid-cols-3 gap-8">
                                     <div className="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
                                         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -272,6 +272,7 @@ export default function ProfileClient({
                                         )}
                                     </div>
 
+                                    {/* Premium Status Box */}
                                     <div className="lg:col-span-1">
                                         {!school.is_premium ? (
                                             <div className="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl p-6 shadow-lg h-full flex flex-col justify-between relative overflow-hidden">
@@ -299,6 +300,7 @@ export default function ProfileClient({
                                     </div>
                                 </div>
 
+                                {/* Besucher Statistik */}
                                 <div className="mt-8 pt-8 border-t border-gray-200">
                                     <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                                         <TrendingUp size={20} className="text-blue-600"/> 
@@ -444,7 +446,7 @@ export default function ProfileClient({
                                             </div>
                                         </div>
 
-                                        {/* --- LEISTUNGEN & TAGS (KONTROLLIERT) --- */}
+                                        {/* --- NEU: LEISTUNGEN & TAGS --- */}
                                         <div className="space-y-4 pt-4 border-t border-gray-100">
                                             <h4 className="font-semibold text-gray-800 flex items-center gap-2 pb-2">
                                                 <Tag size={18} className="text-blue-600"/> Leistungen & Merkmale
@@ -453,40 +455,15 @@ export default function ProfileClient({
                                             
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 {AVAILABLE_TAGS.map((tag) => (
-                                                    <label key={tag.id} className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 hover:border-blue-400 transition-colors">
+                                                    <label key={tag.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50/50 hover:border-blue-200 transition-colors">
                                                         <input 
                                                             type="checkbox" 
                                                             name="tags" 
                                                             value={tag.id}
-                                                            checked={selectedTags.includes(tag.id)} // Controlled
-                                                            onChange={() => toggleTag(tag.id)}      // Updater
-                                                            className="w-5 h-5 text-blue-600 border-gray-400 rounded focus:ring-blue-500"
+                                                            defaultChecked={school.tags?.includes(tag.id)}
+                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                                         />
-                                                        <span className="font-bold text-gray-900">{tag.label}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* --- SPRACHEN (KONTROLLIERT) --- */}
-                                        <div className="space-y-4 pt-4 border-t border-gray-100">
-                                            <h4 className="font-semibold text-gray-800 flex items-center gap-2 pb-2">
-                                                <Languages size={18} className="text-blue-600"/> Unterrichtssprachen
-                                            </h4>
-                                            <p className="text-sm text-gray-500 mb-4">Welche Sprachen werden angeboten?</p>
-                                            
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                                {AVAILABLE_LANGUAGES.map((lang) => (
-                                                    <label key={lang} className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 hover:border-blue-400 transition-colors">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            name="languages" 
-                                                            value={lang}
-                                                            checked={selectedLanguages.includes(lang)} // Controlled
-                                                            onChange={() => toggleLanguage(lang)}      // Updater
-                                                            className="w-5 h-5 text-blue-600 border-gray-400 rounded focus:ring-blue-500"
-                                                        />
-                                                        <span className="font-bold text-gray-900">{lang}</span>
+                                                        <span className="text-sm font-medium text-gray-700">{tag.label}</span>
                                                     </label>
                                                 ))}
                                             </div>
