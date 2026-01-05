@@ -9,25 +9,25 @@ export interface DrivingSchoolPrices {
 
 export const experienceLevels = {
     beginner: {
-        label: "Beginner",
+        label: "Anfänger",
         drivingLessons: 30,
         theoryExams: 2,
         practicalExams: 2,
     },
     someExperience: {
-        label: "Some Experience",
+        label: "Etwas Erfahrung",
         drivingLessons: 20,
         theoryExams: 1,
         practicalExams: 2,
     },
     advanced: {
-        label: "Advanced",
+        label: "Fortgeschritten",
         drivingLessons: 12,
         theoryExams: 1,
         practicalExams: 1,
     },
     veryExperienced: {
-        label: "Very Experienced",
+        label: " Sehr Erfahren",
         drivingLessons: 6,
         theoryExams: 1,
         practicalExams: 1,

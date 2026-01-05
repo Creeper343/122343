@@ -1,11 +1,11 @@
 // src/lib/tags.ts
 export const AVAILABLE_TAGS = [
-    { id: 'ferienkurs', label: 'Ferienkurs' },
-    { id: 'automatik', label: 'Automatik' },
-    { id: 'motorrad', label: 'Motorrad' },
-    { id: 'frauen', label: 'Fahrlehrerin' },
-    { id: 'englisch', label: 'English Speaking' },
-    { id: 'abendkurs', label: 'Abendkurse' },
-    { id: 'samstag', label: 'Samstagsunterricht' },
-    { id: 'abhol', label: 'Abholservice' },
+    { id: 'Ferienkurs', label: 'Ferienkurs' },
+    { id: 'Automatik', label: 'Automatik' },
+    { id: 'Motorrad', label: 'Motorrad' },
+    { id: 'Fahrlehrerin', label: 'Fahrlehrerin' },
+    { id: 'Anhänger', label: 'Anhänger' },
+    { id: 'Abendkurs', label: 'Abendkurse' },
+    { id: 'Samstagsunterricht', label: 'Samstagsunterricht' },
+    { id: 'Abholservice', label: 'Abholservice' },
 ];

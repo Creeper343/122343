@@ -1,65 +1,35 @@
-// src/app/profile/page.tsx
+// src/app/school/[id]/page.tsx
 import { createClient } from "@/utils/supabase/server";
-import { redirect } from 'next/navigation';
-import ProfileClient from '@/app/profile/ProfileClient';
-import { getAnalyticsStats } from '@/app/actions/analyticsActions'; 
+import SchoolProfileDisplay from '@/components/school/SchoolProfileDisplay';
+import { notFound } from "next/navigation";
 
-export default async function ProfilePage() {
+// Wichtig: Die params müssen als Promise definiert sein in Next.js 15 (oder neueren 14 Versionen)
+interface PageProps {
+    params: Promise<{ id: string }>;
+}
+
+export default async function SchoolDetailPage({ params }: PageProps) {
+    const { id } = await params;
     const supabase = await createClient();
 
-    // 1. User checken
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
-
-    // 2. ALLE Daten abrufen
-    // WICHTIG: 'tags' muss hier dabei sein!
+    // 1. Fahrschule anhand der ID aus der URL laden
     const { data: school, error } = await supabase
         .from('driving_school')
-        .select(`
-            id, 
-            name, 
-            city, 
-            address, 
-            PLZ, 
-            phone_number, 
-            email, 
-            website, 
-            driving_price, 
-            grundgebuehr, 
-            praxispruefung, 
-            theorypruefung, 
-            is_premium,
-            tags
-        `)
-        .eq('admin_id', user.id)
+        .select('*')
+        .eq('id', id)
+        // .eq('is_published', true) // Optional: Nur veröffentlichte anzeigen
         .single();
 
-    if (error || !school) return <div className="p-8 text-center">Keine Daten gefunden.</div>;
-
-    // 3. Markt-Statistiken abrufen
-    let stats = null;
-    if (school.city) {
-        const { data: citySchools } = await supabase
-            .from('driving_school')
-            .select('driving_price, grundgebuehr')
-            .eq('city', school.city)
-            .eq('is_published', true);
-
-        if (citySchools && citySchools.length > 0) {
-            const totalSchools = citySchools.length;
-            const avgDrivingPrice = Math.round(citySchools.reduce((a, c) => a + (c.driving_price || 0), 0) / totalSchools);
-            const avgGrundgebuehr = Math.round(citySchools.reduce((a, c) => a + (c.grundgebuehr || 0), 0) / totalSchools);
-            const cityRank = citySchools.filter(s => (s.driving_price || 0) < school.driving_price).length + 1;
-            stats = { avgDrivingPrice, avgGrundgebuehr, totalSchools, cityRank };
-        }
+    if (error || !school) {
+        return notFound();
     }
 
-    // 4. Analytics Daten abrufen
-    const analytics = await getAnalyticsStats(school.id);
-
+    // 2. Öffentliche Komponente rendern (NICHT ProfileClient)
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen py-8 bg-gray-50">
-            <ProfileClient school={school} stats={stats} analytics={analytics} />
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+            <main className="flex-grow py-8 px-4">
+                <SchoolProfileDisplay school={school} />
+            </main>
         </div>
     );
 }
