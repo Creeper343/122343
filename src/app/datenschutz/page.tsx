@@ -43,10 +43,10 @@ export default function DatenschutzPage() {
             <h3 className="font-semibold mt-2">Verantwortliche Stelle</h3>
             <p className="mb-2">Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:</p>
             <p className="p-3 bg-gray-50 rounded border border-gray-100">
-              [Dein Name]<br />
-              [Deine Straße]<br />
-              [Deine PLZ Ort]<br />
-              E-Mail: [Deine E-Mail]
+              Michael Azrak<br />
+              Locher Str. 134<br />
+              42719<br />
+              E-Mail: azrakmichael@gmail.com
             </p>
           </section>
 
