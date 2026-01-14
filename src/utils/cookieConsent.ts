@@ -412,8 +412,7 @@ function hideBanner(el: HTMLElement) {
 
 /**
  * Beispiel: initialisiert Analytics nur, wenn bereits Consent besteht.
- * Du kannst diese Funktion beim App-Mount aufrufen:
- *   initAnalytics(() => { /* optional callback */ });
+ * Du kannst diese Funktion beim App-Mount aufrufen, z. B. `initAnalytics(() => {})`.
  */
 export function initAnalytics(initFn?: () => void) {
   if (!hasConsentFor('analytics')) return;
