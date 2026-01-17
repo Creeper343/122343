@@ -147,7 +147,9 @@ export default function ProfileClient({
                                             </h4>
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 {AVAILABLE_TAGS.map(tag => (
-                                                    <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-3 py-1 rounded-full border ${selectedTags.includes(tag) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}>{tag}</button>
+                                                    <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-3 py-1 rounded-full border ${selectedTags.includes(tag) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}> 
+                                                        {tag}
+                                                    </button>
                                                 ))}
                                             </div>
 
