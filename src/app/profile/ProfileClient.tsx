@@ -158,7 +158,7 @@ export default function ProfileClient({
                         />
                     </div>
                     <div className="pt-2">
-                        <button onClick={() => router.push('/')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                        <button onClick={() => router.push('/')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
                             <ExternalLink size={20} /><span>Zur Website</span>
                         </button>
                     </div>
@@ -208,22 +208,25 @@ export default function ProfileClient({
                                     <div className="text-right">
                                         <span className="text-sm text-gray-500">Status</span>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <span className={`w-2.5 h-2.5 rounded-full ${school.is_premium ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-300'}`}></span>
+                                            <span className={`w-2.5 h-2.5 rounded-full ${school.is_premium ? 'bg_green-500' : 'bg-gray-300'}`}></span>
                                             <span className={`font-bold ${school.is_premium ? 'text-green-700' : 'text-gray-600'}`}>{school.is_premium ? 'Premium Aktiv' : 'Standard'}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
-                                    <Info className="text-blue-600 shrink-0 mt-0.5" size={20} />
-                                    <div>
-                                        <h4 className="font-semibold text-blue-900 text-sm">Sichtbarkeit deiner Kontaktdaten</h4>
-                                        <p className="text-blue-700/80 text-sm mt-1">
-                                            Im öffentlichen Vergleich werden <strong>keine Kontaktdaten</strong> angezeigt (außer bei Premium). 
-                                            Die visibilität deiner Fahrschule wird eingeschränkt.
-                                        </p>
+                                {/* Banner: Sichtbarkeit (nur für Nicht-Premium) */}
+                                {!school.is_premium && (
+                                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
+                                        <Info className="text-blue-600 shrink-0 mt-0.5" size={20} />
+                                        <div>
+                                            <h4 className="font-semibold text-blue-900 text-sm">Sichtbarkeit deiner Kontaktdaten</h4>
+                                            <p className="text-blue-700/80 text-sm mt-1">
+                                                Im öffentlichen Vergleich werden <strong>keine Kontaktdaten</strong> angezeigt (außer bei Premium). 
+                                                Die Sichtbarkeit deiner Fahrschule wird eingeschränkt.
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     <StatCard 
@@ -323,7 +326,7 @@ export default function ProfileClient({
                                             </div>
                                         )}
 
-                                        <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${!school.is_premium ? 'filter blur-sm select-none opacity-50' : ''}`}>
+                                        <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${!school.is_premium ? 'filter blur-sm select-none opacity-50' : ''}`}> 
                                             <StatCard 
                                                 title="Profilaufrufe" 
                                                 value={analytics.views.toString()} 
@@ -496,7 +499,7 @@ export default function ProfileClient({
                                         </div>
 
                                         {/* Feedback */}
-                                        {settingsMsg && <div className="text-green-600 bg-green-50 p-3 rounded-lg text-sm border border-green-200 flex items-center gap-2"><CheckCircle2 size={16}/> {settingsMsg}</div>}
+                                        {settingsMsg && <div className="text-green-600 bg-green-50 p-3 rounded-lg text-sm border border-green-200 flex items-center gap-2"><CheckCircle2 size={16}/>{settingsMsg}</div>}
                                         {settingsError && <div className="text-red-600 bg-red-50 p-3 rounded-lg text-sm border border-red-200">{settingsError}</div>}
                                         
                                         <div className="pt-4">
@@ -562,7 +565,7 @@ function InputGroup({ label, name, value, type = "text", placeholder, icon, disa
                     defaultValue={value || ''} 
                     placeholder={placeholder}
                     disabled={disabled}
-                    className={`w-full p-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${icon ? 'pl-10' : ''} ${disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-70' : 'bg-white'}`} 
+                    className={`w-full p-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${icon ? 'pl-10' : ''} ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                 />
             </div>
         </div>
