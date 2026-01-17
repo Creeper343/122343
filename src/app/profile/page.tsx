@@ -1,8 +1,7 @@
-// src/app/profile/page.tsx
 import { createClient } from "@/utils/supabase/server";
 import ProfileClient from './ProfileClient';
 import { redirect } from 'next/navigation';
-import { getAnalyticsStats } from '@/app/actions/analytics';
+import { getAnalyticsStats } from '@/app/actions/analyticsActions';
 
 export default async function ProfilePage() {
     const supabase = await createClient();
@@ -46,5 +45,3 @@ export default async function ProfilePage() {
         </div>
     );
 }
-
----
