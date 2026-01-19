@@ -1,53 +1,45 @@
 // src/app/api/stripe/webhook/route.ts
 import { stripe } from '@/lib/stripe';
-import { createAdminClient } from '@/utils/supabase/admin'; // Wichtig: Importiere den neuen Admin-Client
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 export async function POST(req: Request) {
-    const body = await req.text();
-    const signature = req.headers.get('stripe-signature') as string;
+  const body = await req.text();
+  const signature = req.headers.get('stripe-signature') as string;
 
-    // 1. Variable 'event' deklarieren
-    let event: Stripe.Event;
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+  } catch (error: any) {
+    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+  }
 
-    // 2. Event sicher aus der Signatur konstruieren
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const schoolId = session.metadata?.schoolId;
+    if (!schoolId) {
+      return new NextResponse('Webhook Error: Missing schoolId in metadata', { status: 400 });
+    }
+
     try {
-        event = stripe.webhooks.constructEvent(
-            body,
-            signature,
-            process.env.STRIPE_WEBHOOK_SECRET!
-        );
-    } catch (error: any) {
-        return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+      // Dynamically import the admin client factory (lazy)
+      const adminModule = await import('@/utils/supabase/admin');
+      const supabaseAdmin = adminModule.createAdminClient();
+
+      const { error } = await supabaseAdmin
+        .from('driving_school')
+        .update({ is_premium: true })
+        .eq('id', schoolId);
+
+      if (error) {
+        console.error('Error updating school to premium:', error);
+        return new NextResponse('Webhook Error: Could not update school status', { status: 500 });
+      }
+    } catch (err: any) {
+      console.error('Admin client error or env not set:', err?.message || err);
+      return new NextResponse('Server misconfigured for admin actions', { status: 500 });
     }
+  }
 
-    // 3. Jetzt 'event' verwenden (es ist nun sicher definiert)
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const schoolId = session.metadata?.schoolId;
-
-        if (!schoolId) {
-            return new NextResponse('Webhook Error: Missing schoolId in metadata', {
-                status: 400,
-            });
-        }
-
-        // HIER: Admin Client nutzen, um RLS zu umgehen
-        const supabaseAdmin = createAdminClient(); 
-        
-        const { error } = await supabaseAdmin
-            .from('driving_school')
-            .update({ is_premium: true })
-            .eq('id', schoolId);
-
-        if (error) {
-            console.error('Error updating school to premium:', error);
-            return new NextResponse('Webhook Error: Could not update school status', {
-                status: 500,
-            });
-        }
-    }
-
-    return new NextResponse(null, { status: 200 });
+  return new NextResponse(null, { status: 200 });
 }
