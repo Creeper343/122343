@@ -18,7 +18,7 @@ type School = {
     driving_price: number;
     theorypruefung: number;
     praxispruefung: number;
-    is_premium?: boolean | string | number;
+    is_premium?: boolean;
 };
 
 interface SchoolProfileDisplayProps {
@@ -43,15 +43,6 @@ export default function SchoolProfileDisplay({ school }: SchoolProfileDisplayPro
 
     const displayUrl = (url: string) => url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
 
-    // --- Normalisiere is_premium auf echtes boolean (defensive) ---
-    const isPremium = (() => {
-        const v = school?.is_premium;
-        if (typeof v === 'boolean') return v;
-        if (typeof v === 'number') return v === 1;
-        if (typeof v === 'string') return v.toLowerCase() === 'true' || v === '1';
-        return false;
-    })();
-
     return (
         <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 py-6">
             
@@ -73,14 +64,14 @@ export default function SchoolProfileDisplay({ school }: SchoolProfileDisplayPro
                 </div>
                 
                 <div className="px-6 md:px-10 pb-8 -mt-12 relative flex flex-col md:flex-row gap-6 items-start md:items-end">
-                    <div className="bg-white w-24 h-24 md:w-32 md:h-32 rounded-2xl shadow-xl flex items-center justify-center text-4xl md:text-5xl font-bold text-blue-700 border-4 border-white">
+                    <div className="bg-white w-24 h-24 md:w-32 md:h-32 rounded-2xl shadow-xl flex items-center justify-center text-4xl md:text-5xl font-bold text-blue-700 border-4 border-white shrink-0">
                         {school.name.charAt(0)}
                     </div>
                     
                     <div className="flex-1 w-full">
                         <div className="flex flex-wrap items-center gap-3 mb-2">
                             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{school.name}</h1>
-                            {isPremium && (
+                            {school.is_premium && (
                                 <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-blue-200">
                                     <CheckCircle2 size={14} /> Verifiziert
                                 </span>
@@ -97,13 +88,13 @@ export default function SchoolProfileDisplay({ school }: SchoolProfileDisplayPro
 
                     {/* Action Buttons (HEADER) */}
                     <div className="flex gap-3 w-full md:w-auto">
-                        {isPremium ? (
-                            <> 
+                        {school.is_premium ? (
+                            <>
                                 {school.phone_number && (
                                     <a 
                                         href={`tel:${school.phone_number}`} 
                                         onClick={() => handleTrack('phone_click')}
-                                        className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                                        className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                                     >
                                         <Phone size={18} /> Anrufen
                                     </a>
@@ -114,7 +105,7 @@ export default function SchoolProfileDisplay({ school }: SchoolProfileDisplayPro
                                         target="_blank" 
                                         rel="noopener noreferrer" 
                                         onClick={() => handleTrack('website_click')}
-                                        className="flex-1 md:flex-none bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all shadow-sm flex items-center gap-2"
+                                        className="flex-1 md:flex-none bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                                     >
                                         <Globe size={18} /> Webseite
                                     </a>
@@ -139,7 +130,7 @@ export default function SchoolProfileDisplay({ school }: SchoolProfileDisplayPro
                             <Navigation size={20} className="text-blue-600" /> Kontakt
                         </h3>
                         
-                        {!isPremium && (
+                        {!school.is_premium && (
                             <div className="absolute inset-0 top-16 bg-white/40 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4">
                                 <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
                                     <Lock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -148,26 +139,26 @@ export default function SchoolProfileDisplay({ school }: SchoolProfileDisplayPro
                             </div>
                         )}
 
-                        <div className={`space-y-5 ${!isPremium ? 'filter blur-[3px] select-none opacity-50' : ''}`}> 
+                        <div className={`space-y-5 ${!school.is_premium ? 'filter blur-[3px] select-none opacity-50' : ''}`}>
                             <ContactItem 
                                 icon={<Phone size={18} />} 
                                 label="Telefon" 
                                 value={school.phone_number || "0123 456789"} 
-                                href={isPremium ? `tel:${school.phone_number}` : undefined}
+                                href={school.is_premium ? `tel:${school.phone_number}` : undefined}
                                 onClick={() => handleTrack('phone_click')}
                             />
                             <ContactItem 
                                 icon={<Mail size={18} />} 
                                 label="E-Mail" 
                                 value={school.email || "kontakt@fahrschule.de"} 
-                                href={isPremium ? `mailto:${school.email}` : undefined}
+                                href={school.is_premium ? `mailto:${school.email}` : undefined}
                                 onClick={() => handleTrack('email_click')}
                             />
                             <ContactItem 
                                 icon={<Globe size={18} />} 
                                 label="Webseite" 
                                 value={school.website ? displayUrl(school.website) : "www.fahrschule.de"} 
-                                href={isPremium ? school.website : undefined}
+                                href={school.is_premium ? school.website : undefined}
                                 isLink
                                 onClick={() => handleTrack('website_click')}
                             />
@@ -180,7 +171,7 @@ export default function SchoolProfileDisplay({ school }: SchoolProfileDisplayPro
                         <p className="text-sm text-blue-700/80 mb-4">
                             Melde dich jetzt an oder vereinbare eine unverbindliche Beratung.
                         </p>
-                        {isPremium ? (
+                        {school.is_premium ? (
                             <a 
                                 href={`mailto:${school.email}?subject=Anfrage über Fahrschulfinder`} 
                                 onClick={() => handleTrack('email_click')}
@@ -266,7 +257,7 @@ function PriceCard({ title, subtitle, price, icon, color }: any) {
     const style = colors[color as keyof typeof colors] || colors.blue;
 
     return (
-        <div className={`p-5 rounded-2xl border ${style.split(' ')[2]} bg-white flex justify-between items-center`}> 
+        <div className={`p-5 rounded-2xl border ${style.split(' ')[2]} bg-white flex justify-between items-center`}>
             <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl ${style}`}>{icon}</div>
                 <div>
